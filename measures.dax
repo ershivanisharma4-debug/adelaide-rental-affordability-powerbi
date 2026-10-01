@@ -1,0 +1,82 @@
+// =====================================================================
+// Adelaide Rental Market & Affordability Analysis – DAX measures
+// Author: Shivani Sharma
+// =====================================================================
+
+
+// ---------- Date table (calculated table) ----------
+Date =
+ADDCOLUMNS (
+    CALENDAR (
+        DATE ( YEAR ( MIN ( Rent[Quarter Date] ) ), 1, 1 ),
+        DATE ( YEAR ( MAX ( Rent[Quarter Date] ) ), 12, 31 )
+    ),
+    "Year", YEAR ( [Date] ),
+    "Quarter", "Q" & QUARTER ( [Date] ),
+    "Year Quarter", YEAR ( [Date] ) & " Q" & QUARTER ( [Date] ),
+    "Year Quarter Sort", YEAR ( [Date] ) * 10 + QUARTER ( [Date] )
+)
+
+
+// ---------- Volume ----------
+Total Bonds =
+SUM ( Rent[Count] )
+
+Bonds Last Year =
+CALCULATE ( [Total Bonds], SAMEPERIODLASTYEAR ( 'Date'[Date] ) )
+
+
+// ---------- Rent ----------
+// Weighted by number of bonds; rows with suppressed medians are excluded
+Weighted Median Rent =
+DIVIDE (
+    SUMX ( Rent, Rent[Count] * Rent[Median Rent] ),
+    SUMX ( FILTER ( Rent, NOT ISBLANK ( Rent[Median Rent] ) ), Rent[Count] )
+)
+
+Rent Last Year =
+CALCULATE ( [Weighted Median Rent], SAMEPERIODLASTYEAR ( 'Date'[Date] ) )
+
+
+// ---------- Growth ----------
+// Blank when either year has no data (prevents false -100% values)
+Rent YoY Growth % =
+IF (
+    ISBLANK ( [Weighted Median Rent] ) || ISBLANK ( [Rent Last Year] ),
+    BLANK (),
+    DIVIDE ( [Weighted Median Rent] - [Rent Last Year], [Rent Last Year] )
+)
+
+// Only rank suburbs with enough bonds in both years
+Reliable YoY Growth % =
+IF (
+    [Total Bonds] >= 30 && [Bonds Last Year] >= 30,
+    [Rent YoY Growth %]
+)
+
+
+// ---------- Affordability (uses the Weekly Income what-if parameter) ----------
+Rent to Income % =
+DIVIDE ( [Weighted Median Rent], [Weekly Income Value] )
+
+Affordability Status =
+IF (
+    ISBLANK ( [Weighted Median Rent] ),
+    BLANK (),
+    IF ( [Rent to Income %] <= 0.3, "Affordable", "Rental stress" )
+)
+
+// NOT ISBLANK prevents suburbs with no data being counted as affordable
+Affordable Suburbs =
+COUNTROWS (
+    FILTER (
+        VALUES ( Rent[Suburb] ),
+        NOT ISBLANK ( [Rent to Income %] )
+            && [Rent to Income %] <= 0.3
+    )
+)
+
+Suburbs With Data =
+COUNTROWS (
+    FILTER ( VALUES ( Rent[Suburb] ), NOT ISBLANK ( [Weighted Median Rent] ) )
+)
