@@ -75,6 +75,7 @@ Full DAX code in [`measures.dax`](measures.dax) and Power Query (M) code in [`re
 - Across all property types, the weighted median rent was **$584 per week** (38.9% of $1,500).
 - The least affordable suburbs were concentrated in the **inner east** and **beachside** areas.
 - For like-for-like 3-bedroom houses, the fastest rent growth was in **outer growth corridors and towns just outside Adelaide** (e.g. Murray Bridge, Mount Barker, Andrews Farm, the Munno Para suburbs), suggesting rent pressure is spreading to traditionally cheaper areas.
+- At that income, only **9 of 93 suburbs** with data were affordable for a 3-bedroom house.
 
 ## Lessons learned
 
@@ -88,6 +89,7 @@ Full DAX code in [`measures.dax`](measures.dax) and Power Query (M) code in [`re
 - Suppressed values (small samples) are excluded, so smaller suburbs are under-represented.
 - Bond data reflects **new leases** in each quarter, not all existing rents.
 - Affordability uses a single household income input, not suburb-level incomes.
+- From 2024 Q3 the source data changed how bond counts were published, so the trend before and after that quarter is not directly comparable.
 
 See [`data-notes.md`](data-notes.md) for full details.
 
